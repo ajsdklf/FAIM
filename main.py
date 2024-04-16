@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(OPENAI_API_KEY)
+OPENAI_API_KEY = os.getenv(OPENAI_API_KEY)
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 MEMBER_SUMMARIZER_PROMPT = "You are a chatbot that summarizes information about specific family members. As input, information about specific family members will be presented to you. Include all relevant information and summarize the input into 2 sentences. Be sure to include all user input. Although input will be in Korean, your answer should be in **English**."
 
