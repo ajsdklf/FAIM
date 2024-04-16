@@ -310,6 +310,7 @@ if option == '가족 유형 검사':
         start_analyzing = st.button("가족 유형 확인")
 
         if start_analyzing:
+            st.spinner("가족 유형을 분석 중이에요! 조금만 기다려주세요!")
             info_convolution = ""
             for message in st.session_state.member_info:
                 info_convolution += message + "\n"
@@ -361,8 +362,11 @@ if option == "가족 미션 추출":
             messages=[
                 {'role': 'system', 'content': MISSION_GENERATOR_PROMPT},
                 {'role': 'user', 'content': family_info_for_mission}
-            ]
-        ).choices[0].message.content
+            ],
+            stream=True
+        )
         
         with st.chat_message('assistant'):
-            st.markdown(mission)
+            for chunk in stream:
+                if chunk.choices[0].delta.content is not None:
+                    st.markdown(chunk.choices[0].delta.content, end="")
