@@ -345,28 +345,31 @@ if option == '가족 유형 검사':
                 st.session_state.family_type.append(best_vector)
 
 if option == "가족 미션 추출":
-    family_type = st.session_state.family_type[0]
-    st.header(f"FAMILY TYPE: {family_type['family type']}")
-    
-    Additional_needs = st.chat_input('미션 생성에서 추가적으로 고려됐으면 하는 사항이 무엇인가요?')
-    
-    family_info_for_mission = ""
-    for summary in st.session_state.member_info:
-        family_info_for_mission += summary
-    family_info_for_mission += f"""가족 유형 : {family_type['family type']}, 해당 유형에 대한 설명: {family_type['type description']}"""
-    
-    if Additional_needs:
-        family_info_for_mission += Additional_needs
-        mission = client.chat.completions.create(
-            model='gpt-4-turbo-preview',
-            messages=[
-                {'role': 'system', 'content': MISSION_GENERATOR_PROMPT},
-                {'role': 'user', 'content': family_info_for_mission}
-            ],
-            stream=True
-        )
+    if st.session_state.family_type != []:
+        family_type = st.session_state.family_type[0]
+        st.header(f"FAMILY TYPE: {family_type['family type']}")
         
-        with st.chat_message('assistant'):
-            for chunk in stream:
-                if chunk.choices[0].delta.content is not None:
-                    st.markdown(chunk.choices[0].delta.content, end="")
+        Additional_needs = st.chat_input('미션 생성에서 추가적으로 고려됐으면 하는 사항이 무엇인가요?')
+        
+        family_info_for_mission = ""
+        for summary in st.session_state.member_info:
+            family_info_for_mission += summary
+        family_info_for_mission += f"""가족 유형 : {family_type['family type']}, 해당 유형에 대한 설명: {family_type['type description']}"""
+        
+        if Additional_needs:
+            family_info_for_mission += Additional_needs
+            mission = client.chat.completions.create(
+                model='gpt-4-turbo-preview',
+                messages=[
+                    {'role': 'system', 'content': MISSION_GENERATOR_PROMPT},
+                    {'role': 'user', 'content': family_info_for_mission}
+                ],
+                stream=True
+            )
+            
+            with st.chat_message('assistant'):
+                for chunk in stream:
+                    if chunk.choices[0].delta.content is not None:
+                        st.markdown(chunk.choices[0].delta.content, end="")
+    else:
+        st.markdown('가족 유형 분석을 먼저 수행해주세요!')
