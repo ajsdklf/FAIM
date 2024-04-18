@@ -185,7 +185,7 @@ if option == '가족 유형 검사':
 
         if submit_button:
             dad_information = f"""
-            Dad's name : {Dad_name},
+            Role in family : Dad,
             Dad's age : {Dad_age},
             Dad's hobby : {Dad_hobby},
             Dad's job : {Dad_job},
