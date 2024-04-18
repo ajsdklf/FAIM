@@ -201,6 +201,8 @@ if option == '가족 유형 검사':
             ).choices[0].message.content
             
             st.session_state.member_info.append(summary)
+            
+            st.session_state.members_count += 1
 
         with st.form(key="mom_information"):
             mom_name = st.text_input("엄마의 이름은 무엇인가요?")
@@ -228,6 +230,7 @@ if option == '가족 유형 검사':
             ).choices[0].message.content
             
             st.session_state.member_info.append(summary)
+            st.session_state.members_count += 1
 
         with st.form(key="child1_information"):
             child_name = st.text_input("자식의 이름은 무엇인가요?")
@@ -256,6 +259,8 @@ if option == '가족 유형 검사':
             ).choices[0].message.content
             
             st.session_state.member_info.append(summary)
+            st.session_state.members_count += 1
+
             
         with st.form(key="child2_information"):
             child_name = st.text_input("자식의 이름은 무엇인가요?")
@@ -284,6 +289,8 @@ if option == '가족 유형 검사':
             ).choices[0].message.content
             
             st.session_state.member_info.append(summary)
+            st.session_state.members_count += 1
+
 
         with st.form(key='Family information'):
             important_family_activity = st.text_input("가족이 함께하는 활동에서 가장 중요하게 생각하는 것은 무엇인가요?")
@@ -310,39 +317,42 @@ if option == '가족 유형 검사':
         start_analyzing = st.button("가족 유형 확인")
 
         if start_analyzing:
-            st.spinner("가족 유형을 분석 중이에요! 조금만 기다려주세요!")
-            info_convolution = ""
-            for message in st.session_state.member_info:
-                info_convolution += message + "\n"
-                extracted_summarized_info = client.chat.completions.create(
-                    model='gpt-4-turbo-preview',
-                    messages=[
-                        {'role': 'system', 'content': INFORMATION_EXTRACTOR_PROMPT},
-                        {'role': 'user', 'content': info_convolution}
-                    ],  
-                response_format={'type': 'json_object'}
-                ).choices[0].message.content
+            if st.session_state.members_count == num_members:
+                st.spinner("가족 유형을 분석 중이에요! 조금만 기다려주세요!")
+                info_convolution = ""
+                for message in st.session_state.member_info:
+                    info_convolution += message + "\n"
+                    extracted_summarized_info = client.chat.completions.create(
+                        model='gpt-4-turbo-preview',
+                        messages=[
+                            {'role': 'system', 'content': INFORMATION_EXTRACTOR_PROMPT},
+                            {'role': 'user', 'content': info_convolution}
+                        ],  
+                    response_format={'type': 'json_object'}
+                    ).choices[0].message.content
 
-            extracted_summarized_info = json.loads(extracted_summarized_info)
-            family_vector = get_embedding(extracted_summarized_info['Summarization'])
-            
-            max_similarity = 0
-            best_vector = None
+                extracted_summarized_info = json.loads(extracted_summarized_info)
+                family_vector = get_embedding(extracted_summarized_info['Summarization'])
+                
+                max_similarity = 0
+                best_vector = None
 
-            for vector in st.session_state.type_vector:
-                similarity = 100 * cossim(vector['embedded vector'], family_vector).round(4)
-                
-                st.markdown(f"{vector['family type']} 점수 : {similarity}")
-                # 지금 데모에서는 출력값을 코사인 유사도를 기준으로 하니까 너무 값이 다 높아요.. 그래서 그냥 logprob으로 구조를 갈아야할 것 같은데 지금 당장 하기엔 시간이 너무 오래 걸릴 것 같아서 일단 이대로 했습니다..!!
-                
-                if similarity > max_similarity:
-                    max_similarity = similarity
-                    best_vector = vector
+                for vector in st.session_state.type_vector:
+                    similarity = 100 * cossim(vector['embedded vector'], family_vector).round(4)
+                    
+                    st.markdown(f"{vector['family type']} 점수 : {similarity}")
+                    # 지금 데모에서는 출력값을 코사인 유사도를 기준으로 하니까 너무 값이 다 높아요.. 그래서 그냥 logprob으로 구조를 갈아야할 것 같은데 지금 당장 하기엔 시간이 너무 오래 걸릴 것 같아서 일단 이대로 했습니다..!!
+                    
+                    if similarity > max_similarity:
+                        max_similarity = similarity
+                        best_vector = vector
 
-            if best_vector:
-                st.markdown(f"가장 높은 유사도를 가진 가족 유형: {best_vector['family type']} 점수 : {max_similarity}")
-                
-                st.session_state.family_type.append(best_vector)
+                if best_vector:
+                    st.markdown(f"가장 높은 유사도를 가진 가족 유형: {best_vector['family type']} 점수 : {max_similarity}")
+                    
+                    st.session_state.family_type.append(best_vector)
+            else:
+                st.markdown('가족 정보를 마저 입력해주세요~!')
 
 if option == "가족 미션 추출":
     if st.session_state.family_type != []:
